@@ -20,29 +20,28 @@ public class EditItemActivity extends AppCompatActivity {
 
         etItemToEdit = (EditText) findViewById(R.id.itemToEdit);
 
+        //get the intent that started this activity
         editIntent = getIntent();
+
+        //retrieve text from parent activity and put it in the text area
         String retrievedValue = editIntent.getStringExtra("value");
         etItemToEdit.setText(retrievedValue);
         etItemToEdit.setSelection(retrievedValue.length());//put cursor at end of word
     }
 
-    public void saveNewValue(View v) {
+    public void saveNewValue(View v) {//action to perform when 'save' button is clicked
         String newValue = etItemToEdit.getText().toString();
 
-        //int pos = returnIntent.getIntExtra("index", -1);
         //ArrayList<String> items = returnIntent.getStringArrayListExtra("items");
         //if(pos != -1) {
         //items.set(pos, newValue);
         //Toast.makeText(getBaseContext(), "updating", Toast.LENGTH_LONG).show();
         //}
-        //returnIntent.putExtra("items", items);
 
-        
+        //send new value back to parent activity
         editIntent.putExtra("newValue", newValue);
-        Toast.makeText(getBaseContext(), "new value = " + newValue, Toast.LENGTH_LONG).show();
-        int pos = editIntent.getIntExtra("index", -1);
-        editIntent.putExtra("index", pos);
-        setResult(Activity.RESULT_OK, editIntent);
-        finish();
+        Toast.makeText(getBaseContext(), "Updating...", Toast.LENGTH_LONG).show();
+        setResult(Activity.RESULT_OK, editIntent);//send result as Intent object
+        finish();//end intent
     }
 }
