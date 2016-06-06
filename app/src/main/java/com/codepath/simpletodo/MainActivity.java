@@ -3,6 +3,7 @@ package com.codepath.simpletodo;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -39,12 +40,33 @@ public class MainActivity extends AppCompatActivity {
         lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapter, View item, int pos, long id) {
-                //Toast.makeText(getBaseContext(), items.get(pos).toString(), Toast.LENGTH_LONG).show();
+
                 Intent editItemIntent = new Intent(MainActivity.this, EditItemActivity.class);
                 editItemIntent.putExtra("value", items.get(pos).toString());
-                startActivity(editItemIntent); // brings up the second activity
+                editItemIntent.putExtra("index", pos);
+                //editItemIntent.putStringArrayListExtra("items", items);
+                startActivityForResult(editItemIntent, 1); // brings up the second activity
+
+
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //update items:
+        //items = data.getStringArrayListExtra("items");
+        int pos = data.getIntExtra("index", -1);
+        Log.v("pos", Integer.toString(pos));
+        if (pos != -1)
+            items.set(pos, data.getStringExtra("newValue"));//make sure it returns something
+
+        for (String itemStr : items) {
+            Log.v("ains", itemStr);
+        }
+        itemsAdapter.notifyDataSetChanged();
+
+
     }
 
 
@@ -68,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         writeItems();
     }
 
-    private void readItems(){
+    private void readItems() {
         File filesDir = getFilesDir();
 
         //CharSequence text = filesDir.toString();
@@ -77,17 +99,17 @@ public class MainActivity extends AppCompatActivity {
         File todoFile = new File(filesDir, "todo.txt");
         try {
             items = new ArrayList<String>(FileUtils.readLines(todoFile));
-        }catch (IOException e){
+        } catch (IOException e) {
             items = new ArrayList<String>();
         }
     }
 
-    private void writeItems(){
+    private void writeItems() {
         File filesDir = getFilesDir();
         File todoFile = new File(filesDir, "todo.txt");
         try {
             FileUtils.writeLines(todoFile, items);
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
