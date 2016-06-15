@@ -1,8 +1,12 @@
 package com.codepath.simpletodo;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import java.util.ArrayList;
 
 /**
  * Created by Alicia P on 15-Jun-16.
@@ -30,9 +34,6 @@ public class TodosDatabaseHelper extends SQLiteOpenHelper {
      */
     private TodosDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-
-        // In any activity just pass the context and use the singleton method
-        //PostsDatabaseHelper helper = PostsDatabaseHelper.getInstance(this);
     }
 
     public static synchronized TodosDatabaseHelper getInstance(Context context) {
@@ -78,6 +79,35 @@ public class TodosDatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_TODOS);
             onCreate(db);
         }
+    }
+
+
+    public void getAllTodos(ArrayList<String> todos) {
+        todos = new ArrayList<String>();
+
+        String POSTS_SELECT_QUERY =
+                String.format("SELECT * FROM %s", TABLE_TODOS);
+
+        // "getReadableDatabase()" and "getWriteableDatabase()" return the same object
+        // (except under low disk space scenarios)
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(POSTS_SELECT_QUERY, null);
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    Todo newTodo = new Todo();
+                    newTodo.title = cursor.getString(cursor.getColumnIndex(KEY_TODO_TITLE));
+                    todos.add(newTodo.title);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.d("Sqlite", "Error while trying to get posts from database");
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+        //return todos;
     }
 
 

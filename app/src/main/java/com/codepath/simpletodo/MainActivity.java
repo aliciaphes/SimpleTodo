@@ -29,10 +29,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         lvItems = (ListView) findViewById(R.id.lvItems);
-        readItems();
-        itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
-        lvItems.setAdapter(itemsAdapter);
-        setupListViewListener();
+        //readItems();//initialize 'items'
+        readItems2();
+        if (items != null) {
+            itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
+            lvItems.setAdapter(itemsAdapter);
+            setupListViewListener();
+        }
     }
 
 
@@ -113,6 +116,16 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             items = new ArrayList<String>();
         }
+    }
+
+    private void readItems2() {//read from database:
+
+        //create db instance:
+        TodosDatabaseHelper helper = TodosDatabaseHelper.getInstance(this);
+        //just pass the context and use the singleton method
+
+        helper.getAllTodos(items);
+        //Log.v("test", items.get(0));
     }
 
     private void writeItems() {
