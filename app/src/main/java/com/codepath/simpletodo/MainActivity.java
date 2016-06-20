@@ -1,5 +1,6 @@
 package com.codepath.simpletodo;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -9,29 +10,53 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.codepath.data.TodoDbHelper;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+//import com.orm.SugarContext;
+
 public class MainActivity extends AppCompatActivity {
 
     static final int EDIT_TODO = 1;//action identifier
     ArrayList<String> items;
+    ArrayList<Todo> items2;
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
     int index;
+    TodoDbHelper todoDBHelper;
+    ContentValues records;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        lvItems = (ListView) findViewById(R.id.lvItems);
+        //disable instant run in Android Studio settings
+
+        //SugarContext.init(getApplicationContext());
+
+
+        //initialize database helper
+        todoDBHelper = new TodoDbHelper(this);
+
+        //retrieve all items
         //readItems();//initialize 'items'
-        readItems2();
+        items2 = todoDBHelper.readAllItems();
+
         if (items != null) {
+            lvItems = (ListView) findViewById(R.id.lvItems);
+
+            //Log.v("test", items.get(0));
+
+            //http://files.idg.co.kr/itworld/todoapp05.jpg
+            //https://lh3.ggpht.com/C87iFAaYzDqLfwNf3cyC8EkBOdZN-7bQ1JceYuITVfkvapmpZ3A1g1U66enAdB_AyBA
+
             itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
             lvItems.setAdapter(itemsAdapter);
             setupListViewListener();
@@ -46,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> adapter, View item, int pos, long id) {
                 items.remove(pos);
                 itemsAdapter.notifyDataSetChanged();//update visibility of items
-                writeItems();//update persistent
+                writeItems2();//update persistent
                 return true;
             }
         });
@@ -78,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
         itemsAdapter.add(itemText);//add item to adapter
         etNewItem.setText("");//clean text area
-        writeItems();//update persistent
+        writeItems2();//update persistent
     }
 
 
@@ -98,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.v("ains", itemStr);
                 }*/
                 itemsAdapter.notifyDataSetChanged(); //it is needed so results are updated visibly
-                writeItems();//make current data persistent
+                writeItems2();//make current data persistent
             }
         }
     }
@@ -118,15 +143,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void readItems2() {//read from database:
 
-        //create db instance:
-        TodosDatabaseHelper helper = TodosDatabaseHelper.getInstance(this);
-        //just pass the context and use the singleton method
-
-        helper.getAllTodos(items);
-        //Log.v("test", items.get(0));
-    }
 
     private void writeItems() {
         File filesDir = getFilesDir();
@@ -137,4 +154,17 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+
+    private void writeItems2() {
+
+    }
+
+
+/*    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        //SugarContext.terminate();
+    }*/
+
 }

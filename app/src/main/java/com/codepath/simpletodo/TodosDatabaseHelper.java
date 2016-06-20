@@ -9,7 +9,18 @@ import android.util.Log;
 import java.util.ArrayList;
 
 /**
- * Created by Alicia P on 15-Jun-16.
+ * Writing databases:
+ * - get reference to writable database
+ * - create ContentValues of what you want to insert
+ * - insert ContentValues and get a row ID back
+ *
+ * Reading databases:
+ * - query the database and receive a cursor back
+ *
+ * Validating databases:
+ * - validate data in resulting cursor with the original ContentValues
+ *
+ * CLOSE CURSOR AND DATABASE WHEN FINISHED
  */
 public class TodosDatabaseHelper extends SQLiteOpenHelper {
     // Database Info
@@ -82,8 +93,9 @@ public class TodosDatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public void getAllTodos(ArrayList<String> todos) {
-        todos = new ArrayList<String>();
+    public ArrayList<String> getAllTodos() {
+
+        ArrayList<String> todos = new ArrayList<String>();//initialize
 
         String POSTS_SELECT_QUERY =
                 String.format("SELECT * FROM %s", TABLE_TODOS);
@@ -107,8 +119,20 @@ public class TodosDatabaseHelper extends SQLiteOpenHelper {
                 cursor.close();
             }
         }
-        //return todos;
+        return todos;
     }
 
+    /*
+    public ArrayList<String> getAllTodos2() {
+        List<Todo> allValues = Todo.listAll(Todo.class);
+
+        //convert this to items and return them
+        ArrayList<String> todos = new ArrayList<String>();//initialize
+        for (Todo t : allValues) {
+            todos.add(t.title);
+        }
+        return todos;
+    }
+    */
 
 }
