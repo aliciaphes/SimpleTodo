@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         //readItems();//initialize 'items'
         items2 = todoDBHelper.readAllItems();
 
-        if (items != null) {
+        if (items2 != null) {
             lvItems = (ListView) findViewById(R.id.lvItems);
 
             //Log.v("test", items.get(0));
