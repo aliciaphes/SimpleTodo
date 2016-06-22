@@ -15,10 +15,12 @@
  */
 package com.codepath.data;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.codepath.data.TodoContract.TodoEntry;
 import com.codepath.simpletodo.Todo;
@@ -40,17 +42,17 @@ public class TodoDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        final String SQL_CREATE_WEATHER_TABLE = "CREATE TABLE " + TodoEntry.TABLE_NAME + " (" +
+        final String SQL_CREATE_TODO_TABLE = "CREATE TABLE " + TodoEntry.TABLE_NAME + " (" +
 
-                TodoEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                TodoEntry.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
 
                 TodoEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
-                TodoEntry.COLUMN_DATE + " INTEGER NOT NULL, " +
-                TodoEntry.COLUMN_URGENT + " INTEGER NOT NULL;";
+                //TodoEntry.COLUMN_DATE + " INTEGER NOT NULL, " +
+                TodoEntry.COLUMN_URGENT + " INTEGER NOT NULL);";
 
 
         //MAKE SURE TABLE EXISTS BEFORE ATTEMPTING TO CREATE IT!!!
-        sqLiteDatabase.execSQL(SQL_CREATE_WEATHER_TABLE);
+        sqLiteDatabase.execSQL(SQL_CREATE_TODO_TABLE);
     }
 
     @Override
@@ -84,7 +86,7 @@ public class TodoDbHelper extends SQLiteOpenHelper {
                 null, // Values for the "where" clause
                 null, // columns to group by
                 null, // columns to filter by row groups
-                null // sort order
+                TodoEntry.COLUMN_ID + " DESC" // sort order
         );
 
 
@@ -93,13 +95,13 @@ public class TodoDbHelper extends SQLiteOpenHelper {
                 do {
                     Todo newTodo = new Todo();
 
-                    newTodo.id = cursor.getLong(cursor.getColumnIndex("_ID"));
-                    newTodo.title = cursor.getString(cursor.getColumnIndex("COLUMN_TITLE"));
+                    newTodo.id = cursor.getLong(cursor.getColumnIndex(TodoEntry.COLUMN_ID));
+                    newTodo.title = cursor.getString(cursor.getColumnIndex(TodoEntry.COLUMN_TITLE));
                     //newTodo.date = cursor.getDate(cursor.getColumnIndex("COLUMN_DATE"));
 
                     //boolean b = (i != 0);
                     //int i = (b) ? 1 : 0;
-                    newTodo.urgent = (cursor.getInt(cursor.getColumnIndex("COLUMN_URGENT")) != 0);
+                    newTodo.urgent = (cursor.getInt(cursor.getColumnIndex(TodoEntry.COLUMN_URGENT)) != 0);
 
                     records.add(newTodo);
                 } while (cursor.moveToNext());
@@ -114,43 +116,78 @@ public class TodoDbHelper extends SQLiteOpenHelper {
         return records;
     }
 
-    /*
-    public void addTodo(Todo t) {
+    public long createDummyTodo(String title) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("DROP TABLE IF EXISTS " + TodoEntry.TABLE_NAME);
+        onCreate(db);
+
+        Todo t = new Todo();
+
+        t.setTitle(title);
+        t.urgent = true;
+        return insertTodo(t);
+    }
+
+    public long insertTodo(Todo t) {
         // Create and/or open the database for writing
         SQLiteDatabase db = getWritableDatabase();
+
+        long insertionResult = -1L;
 
         ContentValues values = new ContentValues();
 
         values.put(TodoEntry.COLUMN_TITLE, t.title);
-        values.put(TodoEntry.COLUMN_DATE, t.date);
+        //values.put(TodoEntry.COLUMN_DATE, t.date);
         values.put(TodoEntry.COLUMN_URGENT, t.urgent);
 
         // It's a good idea to wrap our insert in a transaction. This helps with performance and ensures
         // consistency of the database.
         db.beginTransaction();
         try {
-            if (findTodo(t)) {//existing record found, so we update it:
-
-                db.update(TodoEntry.TABLE_NAME, values, TodoEntry._ID + "=" + t.id, null);
-
-            } else {//we insert a new one
-
-                db.insertOrThrow(TodoEntry.TABLE_NAME, null, values);//SQLite auto increments the primary key column
-            }
+            insertionResult = db.insertOrThrow(TodoEntry.TABLE_NAME, null, values);//SQLite auto increments the primary key column
 
             db.setTransactionSuccessful();
         } catch (Exception e) {
             //Log.d(TAG, "Error while trying to add todo to database");
+            Log.d("", "Error while trying to add todo to database");
+            //Toast.makeText(this, "Error while trying to add todo to database", Toast.LENGTH_LONG).show();
         } finally {
             db.endTransaction();
         }
-    }
-    */
 
-    /*
-    //returns true if t already exists in the database
-    private boolean findTodo(Todo t) {
-        return MainActivity.this.items2.contains(t);
+        return insertionResult;
     }
-    */
+
+
+    public long updateTodo(Todo t) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        long insertionResult = -1L;
+
+        ContentValues values = new ContentValues();
+
+        values.put(TodoEntry.COLUMN_TITLE, t.title);
+        //values.put(TodoEntry.COLUMN_DATE, t.date);
+        values.put(TodoEntry.COLUMN_URGENT, t.urgent);
+
+        db.beginTransaction();
+        try {
+            insertionResult = db.update(TodoEntry.TABLE_NAME, values, TodoEntry.COLUMN_ID + "=" + t.getId(), null);
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            //Log.d(TAG, "Error while trying to edit todo in database");
+            Log.d("", "Error while trying to edit todo in database");
+            //Toast.makeText(this, "Error while trying to add todo to database", Toast.LENGTH_LONG).show();
+        } finally {
+            db.endTransaction();
+        }
+
+        return insertionResult;
+    }
+
+
+    public long deleteTodo(Todo t) {
+        return -1L;
+    }
+
 }

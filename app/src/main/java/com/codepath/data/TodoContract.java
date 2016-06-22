@@ -40,7 +40,7 @@ public class TodoContract {
         public static final String TABLE_NAME = "todos";
 
         // Column with the primary key
-        //public static final String COLUMN_ID = "todo_id";
+        public static final String COLUMN_ID = "_id";
 
         // Title, stored as string
         public static final String COLUMN_TITLE = "title";

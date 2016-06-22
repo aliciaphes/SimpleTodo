@@ -1,14 +1,17 @@
 package com.codepath.simpletodo;
 
-import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 import com.codepath.data.TodoDbHelper;
 
@@ -17,19 +20,27 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 //import com.orm.SugarContext;
 
 public class MainActivity extends AppCompatActivity {
 
     static final int EDIT_TODO = 1;//action identifier
+
     ArrayList<String> items;
     ArrayList<Todo> items2;
+
     ArrayAdapter<String> itemsAdapter;
+    SimpleAdapter todoAdapter;
+
     ListView lvItems;
     int index;
+
     TodoDbHelper todoDBHelper;
-    ContentValues records;
+
 
 
     @Override
@@ -45,11 +56,17 @@ public class MainActivity extends AppCompatActivity {
         //initialize database helper
         todoDBHelper = new TodoDbHelper(this);
 
+        //CREATE DUMMY TODO
+        if (todoDBHelper.createDummyTodo("todo1") != -1L) {
+            Toast.makeText(this, "record inserted!", Toast.LENGTH_LONG).show();
+        }
+
+
         //retrieve all items
         //readItems();//initialize 'items'
         items2 = todoDBHelper.readAllItems();
 
-        if (items2 != null) {
+        if (items2.size() != 0) {
             lvItems = (ListView) findViewById(R.id.lvItems);
 
             //Log.v("test", items.get(0));
@@ -57,8 +74,29 @@ public class MainActivity extends AppCompatActivity {
             //http://files.idg.co.kr/itworld/todoapp05.jpg
             //https://lh3.ggpht.com/C87iFAaYzDqLfwNf3cyC8EkBOdZN-7bQ1JceYuITVfkvapmpZ3A1g1U66enAdB_AyBA
 
-            itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
-            lvItems.setAdapter(itemsAdapter);
+            items = new ArrayList<String>();
+            for (int i = 0; i < items2.size(); i++) {
+                items.add(items2.get(i).getTitle());
+            }
+
+
+            //https://4.bp.blogspot.com/_I2Ctfz7eew4/S82CgLXsgqI/AAAAAAAAAZo/o10yCm3Efzc/s1600/CustomListView2.1.PNG
+            List<Map<String, String>> data = new ArrayList<Map<String, String>>();
+            for (Todo item : items2) {
+                Map<String, String> todoInfo = new HashMap<String, String>(2);
+                todoInfo.put("title", item.getTitle());
+                todoInfo.put("urgent", item.isUrgent() ? "urgent" : "");
+                data.add(todoInfo);
+            }
+            todoAdapter = new SimpleAdapter(this, data,
+                    android.R.layout.simple_list_item_2,
+                    new String[]{"title", "urgent"},
+                    new int[]{android.R.id.text1, android.R.id.text2});
+            lvItems.setAdapter(todoAdapter);
+
+
+            //itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
+            //lvItems.setAdapter(itemsAdapter);
             setupListViewListener();
         }
     }
@@ -69,9 +107,36 @@ public class MainActivity extends AppCompatActivity {
         lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapter, View item, int pos, long id) {
+
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setMessage("dialog_message")
+                        .setTitle("dialog_title");
+
+
+                // Add the buttons
+                builder.setPositiveButton("delete", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // User clicked OK button
+                    }
+                });
+                builder.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // User cancelled the dialog
+                    }
+                });
+                AlertDialog dialog = builder.create();
+
+
+
                 items.remove(pos);
-                itemsAdapter.notifyDataSetChanged();//update visibility of items
-                writeItems2();//update persistent
+
+                //itemsAdapter.notifyDataSetChanged();//update visibility of items
+                todoAdapter.notifyDataSetChanged();//update visibility of items
+
+
+                Todo t = items2.get(pos);//RETRIEVE TODO THAT WAS CLICKED
+                todoDBHelper.deleteTodo(t);//update persistent
                 return true;
             }
         });
@@ -96,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void onAddItem(View v) {//action for the 'add item' button
+    public void addItem(View v) {//action for the 'add item' button
         //retrieve text
         EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
         String itemText = etNewItem.getText().toString();
