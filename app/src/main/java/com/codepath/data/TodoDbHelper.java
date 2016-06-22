@@ -86,7 +86,7 @@ public class TodoDbHelper extends SQLiteOpenHelper {
                 null, // Values for the "where" clause
                 null, // columns to group by
                 null, // columns to filter by row groups
-                TodoEntry.COLUMN_ID + " DESC" // sort order
+                TodoEntry.COLUMN_ID + " ASC" // sort order
         );
 
 
@@ -116,10 +116,14 @@ public class TodoDbHelper extends SQLiteOpenHelper {
         return records;
     }
 
-    public long createDummyTodo(String title) {
+
+    public void cleanDatabase() {
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS " + TodoEntry.TABLE_NAME);
         onCreate(db);
+    }
+
+    public long createDummyTodo(String title) {
 
         Todo t = new Todo();
 
@@ -187,7 +191,23 @@ public class TodoDbHelper extends SQLiteOpenHelper {
 
 
     public long deleteTodo(Todo t) {
-        return -1L;
+        SQLiteDatabase db = getWritableDatabase();
+
+        long insertionResult = -1L;
+
+
+        db.beginTransaction();
+        try {
+            insertionResult = db.delete(TodoEntry.TABLE_NAME, TodoEntry.COLUMN_ID + "=" + t.getId(), null);
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            //Log.d(TAG, "Error while trying to edit todo in database");
+            //Log.d("", "Error while trying to delete todo from database");
+        } finally {
+            db.endTransaction();
+        }
+
+        return insertionResult;
     }
 
 }

@@ -24,6 +24,12 @@ public class Todo {
         urgent = newUrgent;
     }
 
+    public Todo(Todo t) {
+        id = t.getId();
+        title = t.getTitle();
+        urgent = t.isUrgent();
+    }
+
 
     public long getId() {
         return id;
