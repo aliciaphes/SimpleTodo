@@ -1,10 +1,12 @@
 package com.codepath.simpletodo;
 
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -42,18 +44,13 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     static final int EDIT_TODO = 1;//action identifier
-
+    static TodoDbHelper todoDBHelper;
     ArrayList<String> items; //----> DELETE !!!!
     ArrayList<Todo> items2;
-
     //ArrayAdapter<String> itemsAdapter;
     SimpleAdapter todoAdapter;
-
     ListView lvItems;
     int index;
-
-    TodoDbHelper todoDBHelper;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,8 +68,8 @@ public class MainActivity extends AppCompatActivity {
         //CREATE DUMMY TODOS
         todoDBHelper.cleanDatabase();
         for (int i = 0; i < 5; i++) {
-            if (todoDBHelper.createDummyTodo("todo" + i) != -1L) {
-                Toast.makeText(this, "record inserted!", Toast.LENGTH_LONG).show();
+            if (todoDBHelper.createDummyTodo("todo" + (i + 1)) != -1L) {
+                //Toast.makeText(this, "record inserted!", Toast.LENGTH_LONG).show();
             }
         }
 
@@ -98,8 +95,7 @@ public class MainActivity extends AppCompatActivity {
     private void openDeleteDialog(final int position) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Are you sure you want to delete this todo?")
-                .setTitle("Delete Todo");
+        builder.setMessage("Are you sure you want to delete this todo?").setTitle("Delete Todo");
 
 
         // Add the buttons
@@ -193,13 +189,58 @@ public class MainActivity extends AppCompatActivity {
         EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
         String itemText = etNewItem.getText().toString();
 
-        //launch dialog
+        openAddDialog(itemText);
 
-        //todoAdapter.add(itemText);//add item to adapter
+        //todoAdapter.add(itemText);//add item to adapter IF USER CLICKS ON SAVE
 
         etNewItem.setText("");//clean text area
 
         //WRITE ON DATABASE
+    }
+
+    private void openAddDialog(String itemText) {
+
+        EditText etNewItem;
+
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this).setTitle("Add Todo");
+
+
+        //LayoutInflater inflater = LayoutInflater.from(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View textEntryView = inflater.inflate(R.layout.activity_add_dialog, null);
+
+        builder.setView(R.layout.activity_add_dialog);
+
+
+//        //retrieve text to show:
+//        EditText etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
+//        //EditText etNewItem = (EditText) findViewById(R.id.todo_title);
+//        etNewItem.setText(itemText);
+
+
+        AlertDialog dialog = builder.create();
+
+        etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
+
+        etNewItem.setText(itemText);
+
+
+        dialog.show();
+
+
+//        Dialog builder = aliDialog(itemText);
+//        builder.show();
+    }
+
+
+    public Dialog aliDialog(String value) {
+        LayoutInflater factory = LayoutInflater.from(this);
+        final View textEntryView = factory.inflate(R.layout.activity_add_dialog, null);
+        EditText etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
+        etNewItem.setText(value);
+        Dialog d = new AlertDialog.Builder(this).setTitle(etNewItem.getText().toString()).create();
+        return d;
     }
 
 
@@ -214,10 +255,6 @@ public class MainActivity extends AppCompatActivity {
                     //Log.v("updating", data.getStringExtra("newValue"));
                     items.set(index, data.getStringExtra("newValue"));//make sure it returns something
                 }
-                /*
-                for (String itemStr : items) {
-                    Log.v("ains", itemStr);
-                }*/
 
                 //itemsAdapter.notifyDataSetChanged(); //it is needed so results are updated visibly
                 todoAdapter.notifyDataSetChanged();
@@ -262,6 +299,8 @@ public class MainActivity extends AppCompatActivity {
     public void onDestroy() {
         super.onDestroy();
         //SugarContext.terminate();
+        //THIS IS WHERE WE CLOSE THE DBHELPER
+
     }
     */
 

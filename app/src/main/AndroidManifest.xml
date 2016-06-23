@@ -16,12 +16,16 @@
             </intent-filter>
         </activity>
 
-        <!--        <meta-data android:name="DATABASE_NAME" android:value="todosDatabase.db" />
+        <!--
+                    <meta-data android:name="DATABASE_NAME" android:value="todosDatabase.db" />
                 <meta-data android:name="DATABASE_VERSION" android:value="2" />
                 <meta-data android:name="QUERY_LOG" android:value="true" />
-                <meta-data android:name="DOMAIN_PACKAGE_NAME" android:value="com.codepath.simpletodo"/>-->
+                <meta-data android:name="DOMAIN_PACKAGE_NAME" android:value="com.codepath.simpletodo"/>
+        -->
 
-        <activity android:name=".EditItemActivity"></activity>
+        <activity
+            android:name=".EditItemActivity"
+            android:theme="@android:style/Theme.Holo.Dialog" />
     </application>
 
 </manifest>
