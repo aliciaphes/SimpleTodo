@@ -21,23 +21,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+//import android.app.AlertDialog;
+
 //import com.orm.SugarContext;
 
-/**
- * Pending:
- * r - read all - devuelve un arraylist<todo>
- * <p/>
- * c - enviar todo
- * <p/>
- * u - enviar todo
- * <p/>
- * d - enviar id del todo a borrar
- * <p/>
- * <p/>
- * <p/>
- * el tema fechas?
- * <p/>
- * set all strings to R.string.whatever
+/*
+ Pending:
+  r - read all - devuelve un arraylist<todo>
+
+  c - enviar todo
+
+  u - enviar todo
+
+  d - enviar id del todo a borrar
+
+
+
+  el tema fechas?
+  create asynctask to run queries off the main thread
+
+
+
+ public static final ALLCAPS for our constants
+
+
+ sqliteopenbrowser
+
+ set all strings to R.string.whatever
  */
 
 
@@ -200,47 +210,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void openAddDialog(String itemText) {
 
-        EditText etNewItem;
-
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this).setTitle("Add Todo");
-
-
-        //LayoutInflater inflater = LayoutInflater.from(this);
-        LayoutInflater inflater = getLayoutInflater();
+        LayoutInflater inflater = LayoutInflater.from(this);
         View textEntryView = inflater.inflate(R.layout.activity_add_dialog, null);
 
-        builder.setView(R.layout.activity_add_dialog);
-
-
-//        //retrieve text to show:
-//        EditText etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
-//        //EditText etNewItem = (EditText) findViewById(R.id.todo_title);
-//        etNewItem.setText(itemText);
-
-
-        AlertDialog dialog = builder.create();
-
-        etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
-
+        //retrieve text:
+        EditText etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
         etNewItem.setText(itemText);
 
+        Dialog d = new AlertDialog.Builder(this)
+                .setView(textEntryView)
+                .setTitle("Add Todo")
+                .create();
 
-        dialog.show();
-
-
-//        Dialog builder = aliDialog(itemText);
-//        builder.show();
-    }
-
-
-    public Dialog aliDialog(String value) {
-        LayoutInflater factory = LayoutInflater.from(this);
-        final View textEntryView = factory.inflate(R.layout.activity_add_dialog, null);
-        EditText etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
-        etNewItem.setText(value);
-        Dialog d = new AlertDialog.Builder(this).setTitle(etNewItem.getText().toString()).create();
-        return d;
+        d.show();
     }
 
 

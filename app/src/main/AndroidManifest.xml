@@ -23,9 +23,10 @@
                 <meta-data android:name="DOMAIN_PACKAGE_NAME" android:value="com.codepath.simpletodo"/>
         -->
 
-        <activity
-            android:name=".EditItemActivity"
-            android:theme="@android:style/Theme.Holo.Dialog" />
+        <!--        <activity
+                    android:name=".EditItemActivity"
+                    android:theme="@android:style/Theme.Holo.Dialog" />-->
+        <activity android:name=".EditItemActivity" />
     </application>
 
 </manifest>
