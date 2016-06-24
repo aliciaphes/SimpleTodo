@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -37,9 +38,13 @@ import java.util.Map;
 
 
 
-  el tema fechas?
-  create asynctask to run queries off the main thread
+el tema fechas?
 
+-create asynctask to run queries off the main thread
+-review names of all the variables I use to make sense
+(and rename every 'item' to 'todo')
+-set all strings to R.string.whatever
+-use try/catch blocks
 
 
  public static final ALLCAPS for our constants
@@ -47,7 +52,7 @@ import java.util.Map;
 
  sqliteopenbrowser
 
- set all strings to R.string.whatever
+disable instant run in Android Studio settings if we use Sugar
  */
 
 
@@ -67,21 +72,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //disable instant run in Android Studio settings
-
-        //SugarContext.init(getApplicationContext());
-
-
         //initialize database helper
         todoDBHelper = new TodoDbHelper(this);
 
-        //CREATE DUMMY TODOS
-        todoDBHelper.cleanDatabase();
-        for (int i = 0; i < 5; i++) {
-            if (todoDBHelper.createDummyTodo("todo" + (i + 1)) != -1L) {
-                //Toast.makeText(this, "record inserted!", Toast.LENGTH_LONG).show();
-            }
-        }
+        createDummyTodos();
+
 
         //retrieve all items
         items2 = todoDBHelper.readAllItems();
@@ -92,13 +87,32 @@ public class MainActivity extends AppCompatActivity {
             //http://files.idg.co.kr/itworld/todoapp05.jpg
             //https://lh3.ggpht.com/C87iFAaYzDqLfwNf3cyC8EkBOdZN-7bQ1JceYuITVfkvapmpZ3A1g1U66enAdB_AyBA
 
+/*
             items = new ArrayList<String>();
             for (int i = 0; i < items2.size(); i++) {
                 items.add(items2.get(i).getTitle());
             }
+*/
 
-            showItems();
+            showTodos();
         }
+    }
+
+    private void createDummyTodos() {
+
+        todoDBHelper.cleanDatabase();
+
+        Todo t = new Todo();
+
+        for (int i = 0; i < 2; i++) {
+            t.setTitle("todo" + (i + 1));
+            t.urgent = (i % 2 == 0);
+            if (todoDBHelper.createDummyTodo(t) != -1L) {
+                //Toast.makeText(this, "record inserted!", Toast.LENGTH_LONG).show();
+            }
+        }
+
+
     }
 
 
@@ -113,12 +127,14 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked OK button
                 Todo toDelete = items2.get(position);//retrieve todo that was clicked
-                if (todoDBHelper.deleteTodo(toDelete) != -1L) {//update persistent
 
-                    //items.remove(position);
-                    items2 = todoDBHelper.readAllItems();
-                    showItems();
 
+                long resultOfDeletion = todoDBHelper.deleteTodo(toDelete);//update persistent
+                if (resultOfDeletion != -1L) {
+
+                    //items2 = todoDBHelper.readAllItems();
+                    //showTodos();
+                    refreshListWith(toDelete, 'd');
 
                     Toast.makeText(MainActivity.this, "todo was deleted", Toast.LENGTH_LONG).show();
                 }
@@ -129,12 +145,13 @@ public class MainActivity extends AppCompatActivity {
                 // User cancelled the dialog
             }
         });
+
         AlertDialog dialog = builder.create();
         dialog.show();
     }
 
 
-    private void showItems() {
+    private void showTodos() {
         //itemsAdapter.notifyDataSetChanged();//update visibility of items
         //todoAdapter.notifyDataSetChanged();//update visibility of items
 
@@ -155,9 +172,7 @@ public class MainActivity extends AppCompatActivity {
 
         //itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
         //lvItems.setAdapter(itemsAdapter);
-        setupListViewListener();
-
-
+        setupListViewListener();//set listener for actions to perform on the todos
     }
 
 
@@ -194,35 +209,92 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void addItem(View v) {//action for the 'add item' button
-        //retrieve text
-        EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
-        String itemText = etNewItem.getText().toString();
+    public void openAddDialog(View v) {
 
-        openAddDialog(itemText);
-
-        //todoAdapter.add(itemText);//add item to adapter IF USER CLICKS ON SAVE
-
-        etNewItem.setText("");//clean text area
-
-        //WRITE ON DATABASE
-    }
-
-    private void openAddDialog(String itemText) {
+        EditText a = (EditText) findViewById(R.id.etNewItem);
+        String itemText = a.getText().toString();
 
         LayoutInflater inflater = LayoutInflater.from(this);
-        View textEntryView = inflater.inflate(R.layout.activity_add_dialog, null);
+        final View textEntryView = inflater.inflate(R.layout.activity_add_dialog, null);
 
         //retrieve text:
-        EditText etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
+        final EditText etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
         etNewItem.setText(itemText);
+        etNewItem.setSelection(itemText.length());
 
-        Dialog d = new AlertDialog.Builder(this)
+        AlertDialog.Builder db = new AlertDialog.Builder(this)
                 .setView(textEntryView)
-                .setTitle("Add Todo")
-                .create();
+                .setTitle("Add Todo");
+
+
+        // Add the button and their actions
+        db.setPositiveButton("add", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked OK button
+
+                //retrieve text value
+                String text = etNewItem.getText().toString();
+
+                //retrieve value of checkbox
+                CheckBox urgentCheckbox = (CheckBox) textEntryView.findViewById(R.id.checkBoxAdd);
+                boolean isChecked = urgentCheckbox.isChecked();
+
+                Todo newTodo = new Todo(text, isChecked);
+
+                //add it to the database
+                long newId = todoDBHelper.insertTodo(newTodo);
+
+                if (newId != -1L) {
+                    newTodo.setId(newId);
+                    //refresh the visible list
+                    refreshListWith(newTodo, 'c');
+                }
+                cleanTextArea();
+            }
+        })
+                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // User cancelled the dialog
+                        dialog.dismiss();
+                        cleanTextArea();
+                    }
+                });
+
+        Dialog d = db.create();
 
         d.show();
+    }
+
+    private void cleanTextArea() {
+        EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
+        etNewItem.setText("");
+    }
+
+
+    private void refreshListWith(Todo newTodo, char action) {
+
+        switch (action) {
+            case 'c':
+                items2.add(newTodo);
+                break;
+
+            case 'u':
+                break;
+
+            case 'd':
+                //remove newTodo from the visible list
+                break;
+
+            default:
+                return;
+        }
+
+
+        //todoAdapter.clear();
+        //todoAdapter.addAll(items2);
+
+        todoAdapter.notifyDataSetChanged();
+        lvItems.refreshDrawableState();
     }
 
 
@@ -248,21 +320,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 /*
-    private void readItems() {
-        File filesDir = getFilesDir();
-
-        //CharSequence text = filesDir.toString();
-        //Log.v(getBaseContext(), text, Toast.LENGTH_LONG).show();
-
-        File todoFile = new File(filesDir, "todo.txt");
-        try {
-            items = new ArrayList<String>(FileUtils.readLines(todoFile));
-        } catch (IOException e) {
-            items = new ArrayList<String>();
-        }
-    }
-
-
     private void writeItems() {
         File filesDir = getFilesDir();
         File todoFile = new File(filesDir, "todo.txt");

@@ -36,7 +36,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:onClick="addItem"
-        android:text="Add item" />
+        android:onClick="openAddDialog"
+        android:text="Add todo" />
 
 </RelativeLayout>

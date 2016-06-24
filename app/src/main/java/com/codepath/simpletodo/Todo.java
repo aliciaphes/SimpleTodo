@@ -6,11 +6,14 @@ package com.codepath.simpletodo;
 
 
 public class Todo {
-    //public class Todo extends SugarRecord{
+
     public long id;
     public String title;
     //public Date date;
-    public boolean urgent;
+    public boolean urgent;//true=todo is urgent
+
+
+    //CHECK WHICH CONSTRUCTORS AND METHODS I ACTUALLY USE
 
 
     public Todo() {
@@ -18,8 +21,8 @@ public class Todo {
     }
 
 
-    public Todo(long newId, String newTitle, boolean newUrgent) {
-        id = newId;
+    public Todo(String newTitle, boolean newUrgent) {//public Todo(long newId, String newTitle, boolean newUrgent) {
+        //id = newId;
         title = newTitle;
         urgent = newUrgent;
     }
@@ -35,6 +38,9 @@ public class Todo {
         return id;
     }
 
+    public void setId(long id) {
+        this.id = id;
+    }
 
     public String getTitle() {
         return title;

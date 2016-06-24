@@ -123,12 +123,8 @@ public class TodoDbHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public long createDummyTodo(String title) {
+    public long createDummyTodo(Todo t) {
 
-        Todo t = new Todo();
-
-        t.setTitle(title);
-        t.urgent = true;
         return insertTodo(t);
     }
 
