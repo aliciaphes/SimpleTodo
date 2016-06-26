@@ -1,12 +1,8 @@
 package com.codepath.simpletodo;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
-
-import java.util.ArrayList;
 
 /**
  * Writing databases:
@@ -92,7 +88,7 @@ public class TodosDatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-
+    /*
     public ArrayList<String> getAllTodos() {
 
         ArrayList<String> todos = new ArrayList<String>();//initialize
@@ -122,7 +118,7 @@ public class TodosDatabaseHelper extends SQLiteOpenHelper {
         return todos;
     }
 
-    /*
+
     public ArrayList<String> getAllTodos2() {
         List<Todo> allValues = Todo.listAll(Todo.class);
 

@@ -35,7 +35,6 @@ public class EditItemActivity extends AppCompatActivity {
         //ArrayList<String> items = returnIntent.getStringArrayListExtra("items");
         //if(pos != -1) {
         //items.set(pos, newValue);
-        //Toast.makeText(getBaseContext(), "updating", Toast.LENGTH_LONG).show();
         //}
 
         //send new value back to parent activity

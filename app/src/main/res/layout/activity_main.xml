@@ -13,7 +13,7 @@
         android:id="@+id/lvItems"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/btnAddItem"
+        android:layout_above="@+id/btnAddUpdateItem"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true" />
@@ -25,18 +25,17 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_toLeftOf="@+id/btnAddItem"
-        android:layout_toStartOf="@+id/btnAddItem"
+        android:layout_toLeftOf="@+id/btnAddUpdateItem"
+        android:layout_toStartOf="@+id/btnAddUpdateItem"
         android:hint="Enter a new item" />
 
     <Button
-        android:id="@+id/btnAddItem"
+        android:id="@+id/btnAddUpdateItem"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:onClick="openAddDialog"
         android:text="Add todo" />
 
 </RelativeLayout>

@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -28,15 +29,6 @@ import java.util.Map;
 
 /*
  Pending:
-  r - read all - devuelve un arraylist<todo>
-
-  c - enviar todo
-
-  u - enviar todo
-
-  d - enviar id del todo a borrar
-
-
 
 el tema fechas?
 
@@ -58,6 +50,10 @@ disable instant run in Android Studio settings if we use Sugar
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final char ACTION_DELETE = 'd';
+    public static final char ACTION_UPDATE = 'u';
+    public static final char ACTION_READ = 'r';
+    public static final char ACTION_CREATE = 'c';
     static final int EDIT_TODO = 1;//action identifier
     static TodoDbHelper todoDBHelper;
     ArrayList<String> items; //----> DELETE !!!!
@@ -82,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
         items2 = todoDBHelper.readAllItems();
 
         if (items2.size() != 0) {
-            lvItems = (ListView) findViewById(R.id.lvItems);
 
             //http://files.idg.co.kr/itworld/todoapp05.jpg
             //https://lh3.ggpht.com/C87iFAaYzDqLfwNf3cyC8EkBOdZN-7bQ1JceYuITVfkvapmpZ3A1g1U66enAdB_AyBA
@@ -94,7 +89,15 @@ public class MainActivity extends AppCompatActivity {
             }
 */
 
-            showTodos();
+            initializeList();
+
+            //set listener on 'Add' button:
+            final Button button = (Button) findViewById(R.id.btnAddUpdateItem);
+            button.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    openAddOrUpdateDialog(v, null, ACTION_CREATE);
+                }
+            });
         }
     }
 
@@ -102,11 +105,8 @@ public class MainActivity extends AppCompatActivity {
 
         todoDBHelper.cleanDatabase();
 
-        Todo t = new Todo();
-
         for (int i = 0; i < 2; i++) {
-            t.setTitle("todo" + (i + 1));
-            t.urgent = (i % 2 == 0);
+            Todo t = new Todo(-1L, "todo" + (i + 1), (i % 2 == 0));
             if (todoDBHelper.createDummyTodo(t) != -1L) {
                 //Toast.makeText(this, "record inserted!", Toast.LENGTH_LONG).show();
             }
@@ -133,8 +133,8 @@ public class MainActivity extends AppCompatActivity {
                 if (resultOfDeletion != -1L) {
 
                     //items2 = todoDBHelper.readAllItems();
-                    //showTodos();
-                    refreshListWith(toDelete, 'd');
+                    //initializeList();
+                    refreshListWith(toDelete, ACTION_DELETE);
 
                     Toast.makeText(MainActivity.this, "todo was deleted", Toast.LENGTH_LONG).show();
                 }
@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void showTodos() {
+    private void initializeList() {
         //itemsAdapter.notifyDataSetChanged();//update visibility of items
         //todoAdapter.notifyDataSetChanged();//update visibility of items
 
@@ -167,6 +167,8 @@ public class MainActivity extends AppCompatActivity {
                 android.R.layout.simple_list_item_2,
                 new String[]{"title", "urgent"},
                 new int[]{android.R.id.text1, android.R.id.text2});
+
+        lvItems = (ListView) findViewById(R.id.lvItems);
         lvItems.setAdapter(todoAdapter);
 
 
@@ -192,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
         lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapter, View item, int pos, long id) {
-
+/*
                 //create intent that will be launched
                 Intent editItemIntent = new Intent(MainActivity.this, EditItemActivity.class);
 
@@ -204,50 +206,79 @@ public class MainActivity extends AppCompatActivity {
 
                 //launch intent ()start the 'edit' activity
                 startActivityForResult(editItemIntent, EDIT_TODO);
+                */
+                Todo todo = items2.get(pos);
+                openAddOrUpdateDialog(lvItems, todo, ACTION_UPDATE);
             }
         });
     }
 
 
-    public void openAddDialog(View v) {
-
-        EditText a = (EditText) findViewById(R.id.etNewItem);
-        String itemText = a.getText().toString();
+    private void openAddOrUpdateDialog(View v, final Todo t, final char action) {
 
         LayoutInflater inflater = LayoutInflater.from(this);
         final View textEntryView = inflater.inflate(R.layout.activity_add_dialog, null);
 
-        //retrieve text:
+        //create 'hooks' to retrieve the information they contain to use in the listeners below
         final EditText etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
-        etNewItem.setText(itemText);
-        etNewItem.setSelection(itemText.length());
+        final CheckBox urgentCheckbox = (CheckBox) textEntryView.findViewById(R.id.checkBoxAdd);
 
         AlertDialog.Builder db = new AlertDialog.Builder(this)
                 .setView(textEntryView)
-                .setTitle("Add Todo");
+                .setTitle(action == ACTION_CREATE ? "Add Todo" : "Edit Todo");
 
+        String title = "";
+        if (action == ACTION_CREATE) {
+            title = "add";
+            //retrieve text value
+            EditText a = (EditText) findViewById(R.id.etNewItem);
+            String itemText = a.getText().toString();
+
+            etNewItem.setText(itemText);
+            etNewItem.setSelection(itemText.length());
+
+        } else if (action == ACTION_UPDATE) {
+            title = "edit";
+            etNewItem.setText(t.getTitle());
+            etNewItem.setSelection(t.getTitle().length());
+
+            urgentCheckbox.setChecked(t.isUrgent());
+        }
 
         // Add the button and their actions
-        db.setPositiveButton("add", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User clicked OK button
+        db.setPositiveButton(title, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {// User clicked OK button
 
-                //retrieve text value
-                String text = etNewItem.getText().toString();
+                long newId;
+                boolean isChecked;
 
-                //retrieve value of checkbox
-                CheckBox urgentCheckbox = (CheckBox) textEntryView.findViewById(R.id.checkBoxAdd);
-                boolean isChecked = urgentCheckbox.isChecked();
+                if (action == ACTION_CREATE) {
 
-                Todo newTodo = new Todo(text, isChecked);
+                    String newText = etNewItem.getText().toString();
 
-                //add it to the database
-                long newId = todoDBHelper.insertTodo(newTodo);
+                    //retrieve value of checkbox
+                    isChecked = urgentCheckbox.isChecked();
+                    Todo newTodo = new Todo(-1L, newText, isChecked);
 
-                if (newId != -1L) {
-                    newTodo.setId(newId);
-                    //refresh the visible list
-                    refreshListWith(newTodo, 'c');
+                    //add it to the database
+                    newId = todoDBHelper.insertTodo(newTodo);
+                    if (newId != -1L) {//insertion successful
+                        newTodo.setId(newId);
+                        //refresh the visible list
+                        refreshListWith(newTodo, ACTION_CREATE);
+                    }
+                } else if (action == ACTION_UPDATE) {
+
+                    t.setTitle(etNewItem.getText().toString());
+
+                    isChecked = urgentCheckbox.isChecked();
+                    t.setUrgency(isChecked);
+                    //update todo in the database
+                    newId = todoDBHelper.updateTodo(t);
+                    if (newId != -1L) {//update successful
+                        //refresh the visible list
+                        refreshListWith(t, ACTION_UPDATE);
+                    }
                 }
                 cleanTextArea();
             }
@@ -273,16 +304,27 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshListWith(Todo newTodo, char action) {
 
+        int index;
+
         switch (action) {
-            case 'c':
+            case ACTION_CREATE:
                 items2.add(newTodo);
                 break;
 
-            case 'u':
+            case ACTION_UPDATE:
+                //modify the corresponding todo in items2
+                index = items2.indexOf(newTodo);
+                if (index != -1) {
+                    items2.set(index, newTodo);
+                }
                 break;
 
-            case 'd':
-                //remove newTodo from the visible list
+            case ACTION_DELETE:
+                //remove newTodo from items2
+                index = items2.indexOf(newTodo);
+                if (index != -1) {
+                    items2.remove(index);
+                }
                 break;
 
             default:

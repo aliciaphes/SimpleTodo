@@ -93,15 +93,18 @@ public class TodoDbHelper extends SQLiteOpenHelper {
         try {
             if (cursor.moveToFirst()) {
                 do {
-                    Todo newTodo = new Todo();
 
-                    newTodo.id = cursor.getLong(cursor.getColumnIndex(TodoEntry.COLUMN_ID));
-                    newTodo.title = cursor.getString(cursor.getColumnIndex(TodoEntry.COLUMN_TITLE));
-                    //newTodo.date = cursor.getDate(cursor.getColumnIndex("COLUMN_DATE"));
+                    long id = cursor.getLong(cursor.getColumnIndex(TodoEntry.COLUMN_ID));
+                    String title = cursor.getString(cursor.getColumnIndex(TodoEntry.COLUMN_TITLE));
 
                     //boolean b = (i != 0);
                     //int i = (b) ? 1 : 0;
-                    newTodo.urgent = (cursor.getInt(cursor.getColumnIndex(TodoEntry.COLUMN_URGENT)) != 0);
+                    boolean urgent = (cursor.getInt(cursor.getColumnIndex(TodoEntry.COLUMN_URGENT)) != 0);
+
+                    //newTodo.date = cursor.getDate(cursor.getColumnIndex("COLUMN_DATE"));
+
+
+                    Todo newTodo = new Todo(id, title, urgent);
 
                     records.add(newTodo);
                 } while (cursor.moveToNext());

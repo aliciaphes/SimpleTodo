@@ -13,26 +13,20 @@ public class Todo {
     public boolean urgent;//true=todo is urgent
 
 
-    //CHECK WHICH CONSTRUCTORS AND METHODS I ACTUALLY USE
-
-
-    public Todo() {
-
-    }
-
-
-    public Todo(String newTitle, boolean newUrgent) {//public Todo(long newId, String newTitle, boolean newUrgent) {
-        //id = newId;
+    public Todo(long newId, String newTitle, boolean newUrgent) {
+        id = newId;
         title = newTitle;
         urgent = newUrgent;
     }
 
+    /*
     public Todo(Todo t) {
         id = t.getId();
         title = t.getTitle();
         urgent = t.isUrgent();
     }
 
+*/
 
     public long getId() {
         return id;
@@ -53,4 +47,10 @@ public class Todo {
     public boolean isUrgent() {
         return urgent;
     }
+
+    public void setUrgency(boolean urgency) {
+        urgent = urgency;
+    }
+
+
 }
