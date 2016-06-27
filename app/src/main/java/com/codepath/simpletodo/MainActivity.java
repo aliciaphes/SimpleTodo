@@ -14,7 +14,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 import com.codepath.data.TodoDbHelper;
@@ -57,7 +56,8 @@ public class MainActivity extends AppCompatActivity {
 
     ArrayList<Todo> todoList;
     List<Map<String, String>> todoListVisible;
-    SimpleAdapter todoAdapter;
+    //SimpleAdapter todoAdapter;
+    UrgentTodoAdapter todoAdapter;
     ListView lvTodos;
 
 
@@ -124,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
                 if (resultOfDeletion != -1L) {
 
                     refreshListWith(toDelete, ACTION_DELETE);
-
                     Toast.makeText(MainActivity.this, "todo was deleted", Toast.LENGTH_LONG).show();
                 }
             }
@@ -151,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
             todoInfo.put("urgent", todo.isUrgent() ? "urgent" : "");
             todoListVisible.add(todoInfo);
         }
-        todoAdapter = new SimpleAdapter(this, todoListVisible,
+        todoAdapter = new UrgentTodoAdapter(this, todoListVisible,
                 android.R.layout.simple_list_item_2,
                 new String[]{"title", "urgent"},
                 new int[]{android.R.id.text1, android.R.id.text2});
@@ -189,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
     private void openAddOrUpdateDialog(View v, final Todo t, final char action) {
 
         LayoutInflater inflater = LayoutInflater.from(this);
-        final View textEntryView = inflater.inflate(R.layout.activity_add_dialog, null);
+        final View textEntryView = inflater.inflate(R.layout.activity_addupdate_dialog, null);
 
         //create 'hooks' to retrieve the information they contain to use in the listeners below
         final EditText etNewItem = (EditText) textEntryView.findViewById(R.id.todo_title);
@@ -265,8 +264,8 @@ public class MainActivity extends AppCompatActivity {
                         emailTodoIntent.setData(Uri.parse("mailto:")); // only allow email apps
 
                         String urgent = (t.isUrgent() ? "[URGENT] " : "");
-                        emailTodoIntent.putExtra(Intent.EXTRA_SUBJECT, "Don't forget to...");
-                        emailTodoIntent.putExtra(Intent.EXTRA_TEXT, urgent + t.getTitle());
+                        emailTodoIntent.putExtra(Intent.EXTRA_SUBJECT, urgent + "Don't forget to...");
+                        emailTodoIntent.putExtra(Intent.EXTRA_TEXT, t.getTitle());
 
                         if (emailTodoIntent.resolveActivity(getPackageManager()) != null) {
                             startActivity(emailTodoIntent);
@@ -336,33 +335,6 @@ public class MainActivity extends AppCompatActivity {
         todoAdapter.notifyDataSetChanged();//update visibility of todos
     }
 
-
-
-
-/*
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (requestCode == EDIT_TODO) {//identify action
-
-            if (resultCode == RESULT_OK) {//otherwise data will be null
-
-                if (index != -1) {
-                    //Log.v("updating", data.getStringExtra("newValue"));
-                    items.set(index, data.getStringExtra("newValue"));//make sure it returns something
-                }
-
-                //itemsAdapter.notifyDataSetChanged(); //it is needed so results are updated visibly
-                todoAdapter.notifyDataSetChanged();
-
-
-                //SAVE DATA IN THE DATABASE, EITHER BY INSERTING OR UPDATING!!!!!!!!
-            }
-        }
-    }
-
-
-    */
 
 
 

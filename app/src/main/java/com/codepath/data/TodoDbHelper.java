@@ -47,7 +47,6 @@ public class TodoDbHelper extends SQLiteOpenHelper {
                 TodoEntry.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
 
                 TodoEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
-                //TodoEntry.COLUMN_DATE + " INTEGER NOT NULL, " +
                 TodoEntry.COLUMN_URGENT + " INTEGER NOT NULL);";
 
 
@@ -69,10 +68,6 @@ public class TodoDbHelper extends SQLiteOpenHelper {
 
 
     public ArrayList<Todo> readAllItems() {//read from database:
-
-        //create db instance:
-        //TodosDbHelper helper = TodosDbHelper.getInstance(this);
-        //just pass the context and use the singleton method
 
         ArrayList<Todo> records = new ArrayList<Todo>();
 
@@ -100,9 +95,6 @@ public class TodoDbHelper extends SQLiteOpenHelper {
                     //boolean b = (i != 0);
                     //int i = (b) ? 1 : 0;
                     boolean urgent = (cursor.getInt(cursor.getColumnIndex(TodoEntry.COLUMN_URGENT)) != 0);
-
-                    //newTodo.date = cursor.getDate(cursor.getColumnIndex("COLUMN_DATE"));
-
 
                     Todo newTodo = new Todo(id, title, urgent);
 
@@ -140,7 +132,6 @@ public class TodoDbHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
 
         values.put(TodoEntry.COLUMN_TITLE, t.title);
-        //values.put(TodoEntry.COLUMN_DATE, t.date);
         values.put(TodoEntry.COLUMN_URGENT, t.urgent);
 
         // It's a good idea to wrap our insert in a transaction. This helps with performance and ensures
@@ -170,7 +161,6 @@ public class TodoDbHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
 
         values.put(TodoEntry.COLUMN_TITLE, t.title);
-        //values.put(TodoEntry.COLUMN_DATE, t.date);
         values.put(TodoEntry.COLUMN_URGENT, t.urgent);
 
         db.beginTransaction();
