@@ -8,7 +8,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-public class EditItemActivity extends AppCompatActivity {
+public class EmailTodoActivity extends AppCompatActivity {
 
     EditText etItemToEdit;
     Intent editIntent;

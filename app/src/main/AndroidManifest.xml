@@ -24,9 +24,9 @@
         -->
 
         <!--        <activity
-                    android:name=".EditItemActivity"
+                    android:name=".EmailTodoActivity"
                     android:theme="@android:style/Theme.Holo.Dialog" />-->
-        <activity android:name=".EditItemActivity" />
+        <activity android:name=".EmailTodoActivity" />
     </application>
 
 </manifest>

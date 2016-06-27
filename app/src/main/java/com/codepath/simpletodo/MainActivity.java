@@ -3,6 +3,7 @@ package com.codepath.simpletodo;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -23,9 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//import android.app.AlertDialog;
 
-//import com.orm.SugarContext;
 
 /*
  Pending:
@@ -34,7 +33,6 @@ el tema fechas?
 
 -create asynctask to run queries off the main thread
 -review names of all the variables I use to make sense
-(and rename every 'item' to 'todo')
 -set all strings to R.string.whatever
 -use try/catch blocks
 
@@ -54,14 +52,14 @@ public class MainActivity extends AppCompatActivity {
     public static final char ACTION_UPDATE = 'u';
     public static final char ACTION_READ = 'r';
     public static final char ACTION_CREATE = 'c';
-    static final int EDIT_TODO = 1;//action identifier
+    //static final int EDIT_TODO = 1;//action identifier
     static TodoDbHelper todoDBHelper;
-    ArrayList<String> items; //----> DELETE !!!!
-    ArrayList<Todo> items2;
-    //ArrayAdapter<String> itemsAdapter;
+
+    ArrayList<Todo> todoList;
+    List<Map<String, String>> todoListVisible;
     SimpleAdapter todoAdapter;
-    ListView lvItems;
-    int index;
+    ListView lvTodos;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,31 +72,24 @@ public class MainActivity extends AppCompatActivity {
         createDummyTodos();
 
 
-        //retrieve all items
-        items2 = todoDBHelper.readAllItems();
+        //retrieve all todos
+        todoList = todoDBHelper.readAllItems();
 
-        if (items2.size() != 0) {
 
-            //http://files.idg.co.kr/itworld/todoapp05.jpg
-            //https://lh3.ggpht.com/C87iFAaYzDqLfwNf3cyC8EkBOdZN-7bQ1JceYuITVfkvapmpZ3A1g1U66enAdB_AyBA
+        //http://files.idg.co.kr/itworld/todoapp05.jpg
+        //https://lh3.ggpht.com/C87iFAaYzDqLfwNf3cyC8EkBOdZN-7bQ1JceYuITVfkvapmpZ3A1g1U66enAdB_AyBA
 
-/*
-            items = new ArrayList<String>();
-            for (int i = 0; i < items2.size(); i++) {
-                items.add(items2.get(i).getTitle());
+        initializeList();
+
+
+        //set listener on 'Add' button:
+        final Button button = (Button) findViewById(R.id.btnAddUpdateTodo);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                openAddOrUpdateDialog(v, null, ACTION_CREATE);
             }
-*/
+        });
 
-            initializeList();
-
-            //set listener on 'Add' button:
-            final Button button = (Button) findViewById(R.id.btnAddUpdateItem);
-            button.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    openAddOrUpdateDialog(v, null, ACTION_CREATE);
-                }
-            });
-        }
     }
 
     private void createDummyTodos() {
@@ -126,14 +117,12 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("delete", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked OK button
-                Todo toDelete = items2.get(position);//retrieve todo that was clicked
+                Todo toDelete = todoList.get(position);//retrieve todo that was clicked
 
 
                 long resultOfDeletion = todoDBHelper.deleteTodo(toDelete);//update persistent
                 if (resultOfDeletion != -1L) {
 
-                    //items2 = todoDBHelper.readAllItems();
-                    //initializeList();
                     refreshListWith(toDelete, ACTION_DELETE);
 
                     Toast.makeText(MainActivity.this, "todo was deleted", Toast.LENGTH_LONG).show();
@@ -152,35 +141,31 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void initializeList() {
-        //itemsAdapter.notifyDataSetChanged();//update visibility of items
-        //todoAdapter.notifyDataSetChanged();//update visibility of items
 
         //https://4.bp.blogspot.com/_I2Ctfz7eew4/S82CgLXsgqI/AAAAAAAAAZo/o10yCm3Efzc/s1600/CustomListView2.1.PNG
-        List<Map<String, String>> data = new ArrayList<Map<String, String>>();
-        for (Todo item : items2) {
+        //List<Map<String, String>> data = new ArrayList<Map<String, String>>();
+        todoListVisible = new ArrayList<Map<String, String>>();
+        for (Todo todo : todoList) {
             Map<String, String> todoInfo = new HashMap<String, String>(2);
-            todoInfo.put("title", item.getTitle());
-            todoInfo.put("urgent", item.isUrgent() ? "urgent" : "");
-            data.add(todoInfo);
+            todoInfo.put("title", todo.getTitle());
+            todoInfo.put("urgent", todo.isUrgent() ? "urgent" : "");
+            todoListVisible.add(todoInfo);
         }
-        todoAdapter = new SimpleAdapter(this, data,
+        todoAdapter = new SimpleAdapter(this, todoListVisible,
                 android.R.layout.simple_list_item_2,
                 new String[]{"title", "urgent"},
                 new int[]{android.R.id.text1, android.R.id.text2});
 
-        lvItems = (ListView) findViewById(R.id.lvItems);
-        lvItems.setAdapter(todoAdapter);
+        lvTodos = (ListView) findViewById(R.id.lvTodos);
+        lvTodos.setAdapter(todoAdapter);
 
-
-        //itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
-        //lvItems.setAdapter(itemsAdapter);
         setupListViewListener();//set listener for actions to perform on the todos
     }
 
 
     private void setupListViewListener() {
-        //long clicking on an item deletes it (and updates accordingly):
-        lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        //long clicking on an todo deletes it (and updates accordingly):
+        lvTodos.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapter, View item, int pos, long id) {
 
@@ -191,24 +176,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //simple click launches the EditItem activity:
-        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        lvTodos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapter, View item, int pos, long id) {
-/*
-                //create intent that will be launched
-                Intent editItemIntent = new Intent(MainActivity.this, EditItemActivity.class);
-
-                //initialize the position of the item that was clicked on
-                index = pos;
-
-                //pass current item value to the intent
-                editItemIntent.putExtra("value", items.get(index).toString());
-
-                //launch intent ()start the 'edit' activity
-                startActivityForResult(editItemIntent, EDIT_TODO);
-                */
-                Todo todo = items2.get(pos);
-                openAddOrUpdateDialog(lvItems, todo, ACTION_UPDATE);
+                Todo todo = todoList.get(pos);
+                openAddOrUpdateDialog(lvTodos, todo, ACTION_UPDATE);
             }
         });
     }
@@ -231,14 +203,14 @@ public class MainActivity extends AppCompatActivity {
         if (action == ACTION_CREATE) {
             title = "add";
             //retrieve text value
-            EditText a = (EditText) findViewById(R.id.etNewItem);
-            String itemText = a.getText().toString();
+            EditText a = (EditText) findViewById(R.id.etNewTodo);
+            String todoText = a.getText().toString();
 
-            etNewItem.setText(itemText);
-            etNewItem.setSelection(itemText.length());
+            etNewItem.setText(todoText);
+            etNewItem.setSelection(todoText.length());
 
         } else if (action == ACTION_UPDATE) {
-            title = "edit";
+            title = "update";
             etNewItem.setText(t.getTitle());
             etNewItem.setSelection(t.getTitle().length());
 
@@ -266,6 +238,7 @@ public class MainActivity extends AppCompatActivity {
                         newTodo.setId(newId);
                         //refresh the visible list
                         refreshListWith(newTodo, ACTION_CREATE);
+                        Toast.makeText(MainActivity.this, "todo was created", Toast.LENGTH_LONG).show();
                     }
                 } else if (action == ACTION_UPDATE) {
 
@@ -278,11 +251,28 @@ public class MainActivity extends AppCompatActivity {
                     if (newId != -1L) {//update successful
                         //refresh the visible list
                         refreshListWith(t, ACTION_UPDATE);
+                        Toast.makeText(MainActivity.this, "todo was updated", Toast.LENGTH_LONG).show();
                     }
                 }
                 cleanTextArea();
             }
         })
+                .setNeutralButton("email", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        //create intent that will be launched
+                        Intent emailTodoIntent = new Intent(Intent.ACTION_SENDTO);
+
+                        emailTodoIntent.setData(Uri.parse("mailto:")); // only allow email apps
+
+                        String urgent = (t.isUrgent() ? "[URGENT] " : "");
+                        emailTodoIntent.putExtra(Intent.EXTRA_SUBJECT, "Don't forget to...");
+                        emailTodoIntent.putExtra(Intent.EXTRA_TEXT, urgent + t.getTitle());
+
+                        if (emailTodoIntent.resolveActivity(getPackageManager()) != null) {
+                            startActivity(emailTodoIntent);
+                        }
+                    }
+                })
                 .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         // User cancelled the dialog
@@ -297,7 +287,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void cleanTextArea() {
-        EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
+        EditText etNewItem = (EditText) findViewById(R.id.etNewTodo);
         etNewItem.setText("");
     }
 
@@ -305,25 +295,37 @@ public class MainActivity extends AppCompatActivity {
     private void refreshListWith(Todo newTodo, char action) {
 
         int index;
+        Map<String, String> todoInfo;
 
         switch (action) {
             case ACTION_CREATE:
-                items2.add(newTodo);
+                todoList.add(newTodo);
+
+                todoInfo = new HashMap<String, String>(2);
+                todoInfo.put("title", newTodo.getTitle());
+                todoInfo.put("urgent", newTodo.isUrgent() ? "urgent" : "");
+                todoListVisible.add(todoInfo);
                 break;
 
             case ACTION_UPDATE:
-                //modify the corresponding todo in items2
-                index = items2.indexOf(newTodo);
+                //modify the corresponding todo in todoList
+                index = todoList.indexOf(newTodo);
                 if (index != -1) {
-                    items2.set(index, newTodo);
+                    todoList.set(index, newTodo);
+
+                    todoInfo = new HashMap<String, String>(2);
+                    todoInfo.put("title", newTodo.getTitle());
+                    todoInfo.put("urgent", newTodo.isUrgent() ? "urgent" : "");
+                    todoListVisible.set(index, todoInfo);
                 }
                 break;
 
             case ACTION_DELETE:
-                //remove newTodo from items2
-                index = items2.indexOf(newTodo);
+                //remove newTodo from todos
+                index = todoList.indexOf(newTodo);
                 if (index != -1) {
-                    items2.remove(index);
+                    todoList.remove(index);
+                    todoListVisible.remove(index);
                 }
                 break;
 
@@ -331,15 +333,13 @@ public class MainActivity extends AppCompatActivity {
                 return;
         }
 
-
-        //todoAdapter.clear();
-        //todoAdapter.addAll(items2);
-
-        todoAdapter.notifyDataSetChanged();
-        lvItems.refreshDrawableState();
+        todoAdapter.notifyDataSetChanged();//update visibility of todos
     }
 
 
+
+
+/*
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -361,16 +361,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-/*
-    private void writeItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        try {
-            FileUtils.writeLines(todoFile, items);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+
     */
 
 
