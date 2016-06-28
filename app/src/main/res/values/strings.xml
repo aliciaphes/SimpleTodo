@@ -17,4 +17,7 @@
     <string name="email">email</string>
     <string name="subject_urgent">"[URGENT] "</string>
     <string name="do_not_forget">Don\'t forget to...</string>
+    <string name="enter_new_todo">Enter a new todo</string>
+    <string name="hint">To do: ...</string>
+    <string name="Urgent">Urgent</string>
 </resources>

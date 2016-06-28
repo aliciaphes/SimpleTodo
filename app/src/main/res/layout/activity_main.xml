@@ -27,7 +27,7 @@
         android:layout_alignParentStart="true"
         android:layout_toLeftOf="@+id/btnAddUpdateTodo"
         android:layout_toStartOf="@+id/btnAddUpdateTodo"
-        android:hint="Enter a new todo" />
+        android:hint="@string/enter_new_todo" />
 
     <Button
         android:id="@+id/btnAddUpdateTodo"
@@ -36,6 +36,6 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:text="Add todo" />
+        android:text="@string/add_todo" />
 
 </RelativeLayout>
