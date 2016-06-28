@@ -18,58 +18,65 @@ package com.codepath.data;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.codepath.data.TodoContract.TodoEntry;
+import com.codepath.simpletodo.MainActivity;
 import com.codepath.simpletodo.Todo;
 
 import java.util.ArrayList;
 
 /**
- * Manages a local database for todo data.
+ * Manage a local database for todo data extending Android class
  */
 public class TodoDbHelper extends SQLiteOpenHelper {
 
     static final String DATABASE_NAME = "todos.db";
-    // If you change the database schema, you must increment the database version.
+    //database version must incremented if schema changes.
     private static final int DATABASE_VERSION = 2;
+    public final String TAG = TodoDbHelper.class.getSimpleName();
 
+
+    //constructor
     public TodoDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        //build SQL query to create table
         final String SQL_CREATE_TODO_TABLE = "CREATE TABLE " + TodoEntry.TABLE_NAME + " (" +
 
                 TodoEntry.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-
                 TodoEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
                 TodoEntry.COLUMN_URGENT + " INTEGER NOT NULL);";
 
-
-        //MAKE SURE TABLE EXISTS BEFORE ATTEMPTING TO CREATE IT!!!
-        sqLiteDatabase.execSQL(SQL_CREATE_TODO_TABLE);
+        try {
+            sqLiteDatabase.execSQL(SQL_CREATE_TODO_TABLE);
+        } catch (SQLException e) {
+            Log.e(TAG, "Error creating table in database");
+        }
     }
+
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
-        // This database is only a cache for online data, so its upgrade policy is
-        // to simply to discard the data and start over
-        // Note that this only fires if you change the version number for your database.
-        // It does NOT depend on the version number for your application.
-        // If you want to update the schema without wiping data, commenting out the next 2 lines
-        // should be your top priority before modifying this method.
+        //Action to do when database version increases
+        //This is a small application, so in case the schema is updated, the data will be wiped
+        //If that is not wanted, the next two lines can be commented out
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TodoEntry.TABLE_NAME);
         onCreate(sqLiteDatabase);
     }
 
 
-    public ArrayList<Todo> readAllItems() {//read from database:
+    //Read contents from database and return an array of todos
+    public ArrayList<Todo> readAllTodos() {
 
-        ArrayList<Todo> records = new ArrayList<Todo>();
+        ArrayList<Todo> todos = new ArrayList<Todo>();
 
         SQLiteDatabase db = getReadableDatabase();
 
@@ -81,122 +88,92 @@ public class TodoDbHelper extends SQLiteOpenHelper {
                 null, // Values for the "where" clause
                 null, // columns to group by
                 null, // columns to filter by row groups
-                TodoEntry.COLUMN_ID + " ASC" // sort order
+                TodoEntry.COLUMN_ID + " ASC" // sort order (ascending)
         );
 
 
         try {
             if (cursor.moveToFirst()) {
                 do {
-
+                    //retrieve data from cursor received and add it to the list
                     long id = cursor.getLong(cursor.getColumnIndex(TodoEntry.COLUMN_ID));
                     String title = cursor.getString(cursor.getColumnIndex(TodoEntry.COLUMN_TITLE));
-
-                    //boolean b = (i != 0);
-                    //int i = (b) ? 1 : 0;
                     boolean urgent = (cursor.getInt(cursor.getColumnIndex(TodoEntry.COLUMN_URGENT)) != 0);
 
                     Todo newTodo = new Todo(id, title, urgent);
 
-                    records.add(newTodo);
+                    todos.add(newTodo);
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            //Log.d(TAG, "Error while trying to get posts from database");
+            Log.e(TAG, "Error while trying to get todos from database");
         } finally {
             if (cursor != null && !cursor.isClosed()) {
                 cursor.close();
             }
         }
-        return records;
+        return todos;
     }
 
 
     public void cleanDatabase() {
+        //wipe the data
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS " + TodoEntry.TABLE_NAME);
         onCreate(db);
     }
 
-    public long createDummyTodo(Todo t) {
 
-        return insertTodo(t);
+    //Dummy function to add one todo to the database
+    public long createDummyTodo(Todo t) {
+        return todoCRUD(t, MainActivity.ACTION_CREATE);
     }
 
-    public long insertTodo(Todo t) {
+
+    //this function performs the typical operations:
+    //creates, deletes and updates the database
+    public long todoCRUD(Todo t, char action) {
+
         // Create and/or open the database for writing
         SQLiteDatabase db = getWritableDatabase();
 
-        long insertionResult = -1L;
-
         ContentValues values = new ContentValues();
+        long operationResult = -1L;
 
-        values.put(TodoEntry.COLUMN_TITLE, t.title);
-        values.put(TodoEntry.COLUMN_URGENT, t.urgent);
-
-        // It's a good idea to wrap our insert in a transaction. This helps with performance and ensures
-        // consistency of the database.
+        // wrap operation in a transaction.
+        // This helps with performance and ensures consistency of the database.
         db.beginTransaction();
         try {
-            insertionResult = db.insertOrThrow(TodoEntry.TABLE_NAME, null, values);//SQLite auto increments the primary key column
+            switch (action) {
+                case MainActivity.ACTION_DELETE:
+                    operationResult = db.delete(TodoEntry.TABLE_NAME, TodoEntry.COLUMN_ID + "=" + t.getId(), null);
+                    break;
+
+                case MainActivity.ACTION_UPDATE:
+
+                    values.put(TodoEntry.COLUMN_TITLE, t.getTitle());
+                    values.put(TodoEntry.COLUMN_URGENT, t.isUrgent());
+
+                    operationResult = db.update(TodoEntry.TABLE_NAME, values, TodoEntry.COLUMN_ID + "=" + t.getId(), null);
+                    break;
+
+                case MainActivity.ACTION_CREATE:
+
+                    values.put(TodoEntry.COLUMN_TITLE, t.getTitle());
+                    values.put(TodoEntry.COLUMN_URGENT, t.isUrgent());
+
+                    //SQLite auto increments the primary key column
+                    operationResult = db.insertOrThrow(TodoEntry.TABLE_NAME, null, values);
+                    break;
+            }
 
             db.setTransactionSuccessful();
         } catch (Exception e) {
-            //Log.d(TAG, "Error while trying to add todo to database");
-            Log.d("", "Error while trying to add todo to database");
-            //Toast.makeText(this, "Error while trying to add todo to database", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Error while trying to access the database");
         } finally {
             db.endTransaction();
         }
 
-        return insertionResult;
+        return operationResult;
     }
-
-
-    public long updateTodo(Todo t) {
-        SQLiteDatabase db = getWritableDatabase();
-
-        long insertionResult = -1L;
-
-        ContentValues values = new ContentValues();
-
-        values.put(TodoEntry.COLUMN_TITLE, t.title);
-        values.put(TodoEntry.COLUMN_URGENT, t.urgent);
-
-        db.beginTransaction();
-        try {
-            insertionResult = db.update(TodoEntry.TABLE_NAME, values, TodoEntry.COLUMN_ID + "=" + t.getId(), null);
-            db.setTransactionSuccessful();
-        } catch (Exception e) {
-            //Log.d(TAG, "Error while trying to edit todo in database");
-            Log.d("", "Error while trying to edit todo in database");
-            //Toast.makeText(this, "Error while trying to add todo to database", Toast.LENGTH_LONG).show();
-        } finally {
-            db.endTransaction();
-        }
-
-        return insertionResult;
-    }
-
-
-    public long deleteTodo(Todo t) {
-        SQLiteDatabase db = getWritableDatabase();
-
-        long insertionResult = -1L;
-
-
-        db.beginTransaction();
-        try {
-            insertionResult = db.delete(TodoEntry.TABLE_NAME, TodoEntry.COLUMN_ID + "=" + t.getId(), null);
-            db.setTransactionSuccessful();
-        } catch (Exception e) {
-            //Log.d(TAG, "Error while trying to edit todo in database");
-            //Log.d("", "Error while trying to delete todo from database");
-        } finally {
-            db.endTransaction();
-        }
-
-        return insertionResult;
-    }
-
 }

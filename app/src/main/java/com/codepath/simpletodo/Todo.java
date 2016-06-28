@@ -1,32 +1,26 @@
 package com.codepath.simpletodo;
 
 /**
- * Created by Alicia P on 15-Jun-16.
+ * This is the class that will represent a Todo.
+ * It contains ID, a title and a flag indicating if todo is urgent.
+ * It can be further enhanced adding more properties.
  */
-
-
 public class Todo {
 
     public long id;
     public String title;
-    //public Date date;
     public boolean urgent;//true=todo is urgent
 
-
+    //constructor
     public Todo(long newId, String newTitle, boolean newUrgent) {
         id = newId;
         title = newTitle;
         urgent = newUrgent;
     }
 
-    /*
-    public Todo(Todo t) {
-        id = t.getId();
-        title = t.getTitle();
-        urgent = t.isUrgent();
-    }
 
-*/
+    //setters and getters:
+
 
     public long getId() {
         return id;
@@ -51,6 +45,5 @@ public class Todo {
     public void setUrgency(boolean urgency) {
         urgent = urgency;
     }
-
 
 }

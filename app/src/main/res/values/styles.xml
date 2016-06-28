@@ -2,18 +2,6 @@
 
     <!-- Base application theme. -->
     <style name="SimpleTodoTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customized theme here -->
-        <!--<item name="colorPrimary">@color/colorPrimaryDark</item>-->
-        <!--<item name="colorPrimaryDark">@color/colorPrimary</item>-->
-        <!--<item name="colorAccent">@color/colorAccent</item>-->
     </style>
 
-    <!--<style name="CustomDialogTheme" parent="@android:style/Theme.Dialog">-->
-    <!--<item name="android:bottomBright">@color/colorAccent</item>-->
-    <!--<item name="android:bottomMedium">@color/colorAccent</item>-->
-    <!--<item name="android:centerBright">@color/colorAccent</item>-->
-    <!--<item name="android:centerMedium">@color/colorAccent</item>-->
-    <!--<item name="android:fullBright">@color/colorAccent</item>-->
-    <!--<item name="android:topBright">@color/colorAccent</item>-->
-    <!--</style>-->
 </resources>
